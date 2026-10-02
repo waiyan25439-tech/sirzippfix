@@ -1,0 +1,39 @@
+name: Run Sirzipp Bot & Auto Proxies
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 */6 * * *' # ခြောက်နာရီတစ်ကြိမ် အလိုအလျောက် လုပ်ဆောင်မည်
+
+jobs:
+  run-bot-and-proxies:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Auto-Create & Update Proxies File
+        run: |
+          # proxies.txt ဖိုင်ကို အော်တိုဆောက်ပေးပြီး Proxy အဟောင်းများဖျက်ကာ အသစ်ဖြင့် အစားထိုးမည်
+          curl -s "https://api.proxyscrape.com/v2/?request=displayproxies&protocol=socks5&timeout=10000&country=all&ssl=all&anonymity=all" > proxies.txt
+
+      - name: Install System Dependencies (For ddddocr)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-glx libglib2.0-0
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install aiohttp aiohttp-socks ddddocr python-telegram-bot requests
+
+      - name: Run Sirzipp Bot Script
+        run: |
+          # ပြင်ဆင်ထားသော sirzippfix.py ကို တိုက်ရိုက် run မည်[span_0](start_span)[span_0](end_span)
+          timeout 300m python sirzippfix.py || true
